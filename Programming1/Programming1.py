@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 f1 = np.array([[1, 2, 1],[2, 4, 2],[1, 2, 1]], dtype='float')
 f1 *= 1.0/16
@@ -9,7 +9,7 @@ f2 *= 1.0/273
 
 def applyFilter(filename, filter):
     with Image.open(filename) as image:
-        im = np.array(image)
+        im = np.array(ImageOps.grayscale(image))
 
     sz = im.shape
     fz = filter.shape[0]
@@ -25,7 +25,7 @@ def applyFilter(filename, filter):
 
     for i in range(0, sz[0]):
         for j in range(0, sz[1]):
-            z = np.matmul(filter, im[i:i+fz, j:j+fz])
+            z = np.multiply(filter, im[i:i+fz, j:j+fz])
             out[i][j] = np.sum(z)
 
 
@@ -34,3 +34,4 @@ def applyFilter(filename, filter):
     return out
 
 applyFilter('filter1_img.jpg', f1)
+applyFilter('filter2_img.jpg', f2)
