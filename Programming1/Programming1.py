@@ -10,21 +10,16 @@ f2 *= 1.0/273
 dogx = np.array([[1, 0, -1],[2, 0, -2],[1, 0, -1]])
 dogy = np.array([[1, 2, 1],[0,0,0],[-1,-2,-1]])
 
-def applyFilter(filename, filter):
+def applyFilter(filename, filter, padding):
     with Image.open(filename) as image:
         im = np.array(ImageOps.grayscale(image))
 
     sz = im.shape
     fz = filter.shape[0]
 
-    if fz == 3:
-        im = np.pad(im, 1)
-    else:
-        im = np.pad(im, 2)
+    im = np.pad(im, padding)
 
     out = np.zeros(im.shape)
-
-    zz = im[0:3, 0:3]
 
     for i in range(0, sz[0]):
         for j in range(0, sz[1]):
@@ -36,12 +31,37 @@ def applyFilter(filename, filter):
     img.show()
     return out
 
-#applyFilter('filter1_img.jpg', f1)
-#applyFilter('filter2_img.jpg', f1)
-#applyFilter('filter2_img.jpg', f1)
-#applyFilter('filter2_img.jpg', f2)
+def sobel(filename):
+    with Image.open(filename) as image:
+        im = np.array(ImageOps.grayscale(image))
 
-applyFilter('filter1_img.jpg', dogx)
-applyFilter('filter1_img.jpg', dogy)
-applyFilter('filter2_img.jpg', dogx)
-applyFilter('filter2_img.jpg', dogy)
+    sz = im.shape
+    fz = dogx.shape[0]
+
+    im = np.pad(im, 1)
+
+    out = np.zeros(im.shape)
+
+    for i in range(0, sz[0]):
+        for j in range(0, sz[1]):
+            x = np.square(np.sum(np.multiply(im[i:i+fz, j:j+fz], dogx)))
+            y = np.square(np.sum(np.multiply(im[i:i+fz, j:j+fz], dogy)))
+            out[i][j] = np.sqrt(x + y)
+
+    img = Image.fromarray(out)
+    img.show()
+    return out
+
+
+#applyFilter('filter1_img.jpg', f1, 1)
+#applyFilter('filter2_img.jpg', f1, 1)
+#applyFilter('filter2_img.jpg', f2, 2)
+#applyFilter('filter2_img.jpg', f2, 2)
+
+#applyFilter('filter1_img.jpg', dogx, 1)
+#applyFilter('filter1_img.jpg', dogy, 1)
+#applyFilter('filter2_img.jpg', dogx, 1)
+#applyFilter('filter2_img.jpg', dogy, 1)
+
+sobel('filter1_img.jpg')
+sobel('filter2_img.jpg')
