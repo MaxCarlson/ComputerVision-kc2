@@ -7,6 +7,9 @@ f2 = np.array([[1, 4, 7, 4, 1],[4, 16, 26, 16, 4],[7, 26, 41, 26, 7],
                          [4, 16, 26, 16, 4],[1, 4, 7, 4, 1]], dtype='float')
 f2 *= 1.0/273
 
+dogx = np.array([[1, 0, -1],[2, 0, -2],[1, 0, -1]])
+dogy = np.array([[1, 2, 1],[0,0,0],[-1,-2,-1]])
+
 def applyFilter(filename, filter):
     with Image.open(filename) as image:
         im = np.array(ImageOps.grayscale(image))
@@ -33,5 +36,12 @@ def applyFilter(filename, filter):
     img.show()
     return out
 
-applyFilter('filter1_img.jpg', f1)
-applyFilter('filter2_img.jpg', f2)
+#applyFilter('filter1_img.jpg', f1)
+#applyFilter('filter2_img.jpg', f1)
+#applyFilter('filter2_img.jpg', f1)
+#applyFilter('filter2_img.jpg', f2)
+
+applyFilter('filter1_img.jpg', dogx)
+applyFilter('filter1_img.jpg', dogy)
+applyFilter('filter2_img.jpg', dogx)
+applyFilter('filter2_img.jpg', dogy)
