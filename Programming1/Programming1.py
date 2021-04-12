@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image, ImageOps
+import cv2 as cv
 
 f1 = np.array([[1, 2, 1],[2, 4, 2],[1, 2, 1]], dtype='float')
 f1 *= 1.0/16
@@ -53,6 +54,23 @@ def sobel(filename):
     return out
 
 
+def keypoints(filename, idx):
+    img = cv.imread(filename)
+    grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+    sift = cv.SIFT_create()
+    kp = sift.detect(img)
+
+    img = cv.drawKeypoints(grey, kp, img)
+    cv.imwrite('sift_keypoints_{}.jpg'.format(idx),img)
+    
+    return kp
+
+def imgmatch(f1, f2):
+    k1 = keypoints(f1, 1)
+    k2 = keypoints(f2, 2)
+
+
 #applyFilter('filter1_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f2, 2)
@@ -63,5 +81,7 @@ def sobel(filename):
 #applyFilter('filter2_img.jpg', dogx, 1)
 #applyFilter('filter2_img.jpg', dogy, 1)
 
-sobel('filter1_img.jpg')
-sobel('filter2_img.jpg')
+#sobel('filter1_img.jpg')
+#sobel('filter2_img.jpg')
+
+imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
