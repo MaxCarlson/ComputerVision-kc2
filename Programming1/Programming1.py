@@ -77,8 +77,7 @@ def keypoints(filename, idx):
     sift = cv.SIFT_create()
     kp, desc = sift.detectAndCompute(img, None)
 
-    outimg = img
-    img = cv.drawKeypoints(img, kp, outimg)
+    img = cv.drawKeypoints(grey, kp, img)
     cv.imwrite('sift_keypoints_{}.jpg'.format(idx),img)
     
     return grey, kp, desc
@@ -155,7 +154,7 @@ class Base:
 
 
 class K_Means(Base):
-    def __init__(self, data, k, r, dims=2):
+    def __init__(self, data, k, r, dims=2, shape=None):
         super().__init__(data, k, r, dims)
 
         best = np.inf
@@ -165,7 +164,8 @@ class K_Means(Base):
             if sses < best:
                 best = sses
                 bestCentroids = np.array(centroids)[:,0,:]
-
+        
+        # 2D Plot of clusters
         if dims == 2:
             for i in range(self.clusters):
                plt.plot(self.data[closestsCentroids==i, 0], 
@@ -176,15 +176,28 @@ class K_Means(Base):
             plt.show()
             return
         
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        for i, m in zip(range(self.clusters), 
-                        ['o', 'x', '*', '#', '@', '!', '%', '^']):
+        # 3D Plot
+        #fig = plt.figure()
+        #ax = fig.add_subplot(projection='3d')
+        #for i, m in zip(range(self.clusters), 
+        #                ['o', 'x', '*', '#', '@', '!', '%', '^']):
+        #
+        #    d = self.data[closestsCentroids==i]
+        #    ax.scatter(d[:, 0], d[:, 1], d[:, 2], m)
+        #
+        #plt.show()
 
-            d = self.data[closestsCentroids==i]
-            ax.scatter(d[:, 0], d[:, 1], d[:, 2], m)
+        #self.data = self.data[closestsCentroids.astype(int)] 
+        #self.data = np.reshape(self.data, shape)
 
+        self.data = np.take(centroids, closestsCentroids.astype(int), 0)
+        self.data = np.reshape(self.data.astype(int), shape)
+
+        plt.imshow(self.data)
         plt.show()
+        a=5
+
+
 
     def run(self):
 
@@ -230,6 +243,9 @@ class K_Means(Base):
         return centroids, np.sum(bestCentroids[:,1]), bestCentroids[:,0]
 
 
+#data = np.genfromtxt('510_cluster_dataset.txt')
+#K_Means(data, 5, 10) 
+
 data = cv.imread('Kmean_img1.jpg')
 
 scale_percent = 20 # percent of original size
@@ -238,5 +254,6 @@ height = int(data.shape[0] * scale_percent / 100)
 dim = (width, height)
 data = cv.resize(data, dim)
 
+shape = data.shape
 data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
-k = K_Means(data, 5, 2, dims=3)
+K_Means(data, 5, 25, dims=3, shape=shape)
