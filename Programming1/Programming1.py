@@ -3,6 +3,13 @@ from PIL import Image, ImageOps
 import cv2 as cv
 import matplotlib.pyplot as plt
 
+import csv
+import copy
+import math
+import random
+from matplotlib import cm
+from scipy.interpolate import griddata
+
 f1 = np.array([[1, 2, 1],[2, 4, 2],[1, 2, 1]], dtype='float')
 f1 *= 1.0/16
 f2 = np.array([[1, 4, 7, 4, 1],[4, 16, 26, 16, 4],[7, 26, 41, 26, 7],
@@ -115,34 +122,6 @@ def imgmatch(f1, f2):
     plt.savefig('matches')
     plt.show()
 
-
-    #l1, l2 = len(k1), len(k2)
-    #pts = np.zeros((len(k1), 3))
-    #
-    ## Turn SIFT vectors into numpy arrays
-    #kp1s = np.array([np.array(x.pt) for x in k1])
-    #kp2s = np.array([np.array(x.pt) for x in k2])
-    #
-    ## Calculate all l2 distances between k1 and k2 SIFT vectors
-    #for i, kp1 in enumerate(kp1s):
-    #    pts[i, 0]   = i
-    #    k1t         = np.full(kp2s.shape, kp1)
-    #    n           = np.linalg.norm(k1t - kp2s, 2, axis=1)
-    #    minIdx      = np.argmin(n)
-    #    min         = n[minIdx]
-    #    pts[i, 1]   = minIdx
-    #    pts[i, 2]   = min
-    #
-    ## Sort array by the minimum l2 distance between SIFT vectors
-    #pts = pts[pts[:,2].argsort()] 
-    #
-    ## Take lowest 10% of l2 distances
-    #pts = pts[0:int(len(pts)/10)]
-
-
-    
-
-
 #applyFilter('filter1_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f2, 2)
@@ -156,4 +135,88 @@ def imgmatch(f1, f2):
 #sobel('filter1_img.jpg')
 #sobel('filter2_img.jpg')
 
-imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
+#imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
+
+class Base:
+    def __init__(self, data, clusters, r):
+        self.r = r
+        #random.seed(2)
+        self.data = data
+        self.clusters = clusters
+        self.minx = np.min(data[:,0])
+        self.miny = np.min(data[:,1])
+        self.maxx = np.max(data[:,0])
+        self.maxy = np.max(data[:,1])
+
+    def randomPoints(self):
+        return [(random.uniform(self.minx, self.maxx), 
+            random.uniform(self.miny, self.maxy)) for _ in range(self.clusters)]
+
+
+class K_Means(Base):
+    def __init__(self, data, k, r):
+        super().__init__(data, k, r)
+
+        best = np.inf
+        bestCentroids = None
+        for i in range(r):
+            centroids, sses, closestsCentroids = self.run()
+            if sses < best:
+                best = sses
+                bestCentroids = np.array(centroids)[:,0,:]
+
+
+        for i in range(self.clusters):
+           plt.plot(self.data[closestsCentroids==i, 0], 
+                    self.data[closestsCentroids==i, 1], 'o', 
+                    zorder=0, color='rbgkmcy'[i % len('rbgkmcy')])
+        print('BestSSE:', best)
+        plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
+        plt.show()
+
+
+    def run(self):
+
+        centroids = self.randomPoints()
+        prevBest = None
+        bestCentroids = np.ones((len(self.data), 2)) * np.inf
+
+        it = 0
+        while True:
+            prevBest = bestCentroids
+            bestCentroids = np.ones((len(self.data), 2)) * np.inf
+
+            # Assignment
+            for i, c in enumerate(centroids): 
+
+                # Calculate the 2 norm of all points to this centroid
+                norm = np.linalg.norm((self.data - c), 2, 1)
+
+                # Find the rows in which the 2norm is less than the previous best
+                brows = np.where(norm < bestCentroids[:,1])
+
+                # Replace the norm, then replace that best centroid index
+                bestCentroids[brows, 1] = norm[brows] 
+                bestCentroids[brows, 0] = i
+
+            if (prevBest == bestCentroids).all():
+                break
+
+            # Update 
+            for i, c in enumerate(centroids): 
+
+                # Get data values belonging to centroid i
+                m = np.where(bestCentroids[:,0] == i)
+                x = self.data[m,:]
+
+                # Update the centroid
+                centroids[i] = 1/(np.shape(x)[1] if np.shape(x)[1] else 1) \
+                   * np.sum(x, 1)
+                
+                vv = 0
+            it += 1
+
+        return centroids, np.sum(bestCentroids[:,1]), bestCentroids[:,0]
+
+data = np.genfromtxt('510_cluster_dataset.txt')
+k = K_Means(data, 5, 125)
