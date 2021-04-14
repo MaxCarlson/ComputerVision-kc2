@@ -18,6 +18,12 @@ f2 *= 1.0/273
 dogx = np.array([[1, 0, -1],[2, 0, -2],[1, 0, -1]])
 dogy = np.array([[1, 2, 1],[0,0,0],[-1,-2,-1]])
 
+def resizeImage(img, scale_percent):
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    return cv.resize(img, dim)
+
 def applyFilter(filename, filter, padding):
     with Image.open(filename) as image:
         im = np.array(ImageOps.grayscale(image))
@@ -64,23 +70,18 @@ def sobel(filename):
 def keypoints(filename, idx):
     img = cv.imread(filename)
     if idx == 2:
-        scale_percent = 40 # percent of original size
-        width = int(img.shape[1] * scale_percent / 100)
-        height = int(img.shape[0] * scale_percent / 100)
-        dim = (width, height)
         # resize image
-        img = cv.resize(img, dim, interpolation = cv.INTER_AREA)
-  
+        img = resizeImage(img, 40)
 
     grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     sift = cv.SIFT_create()
     kp, desc = sift.detectAndCompute(img, None)
 
-    img = cv.drawKeypoints(grey, kp, img)
+    img = cv.drawKeypoints(img, kp, img)
     cv.imwrite('sift_keypoints_{}.jpg'.format(idx),img)
     
-    return grey, kp, desc
+    return img, kp, desc
 
 def imgmatch(f1, f2):
     im1, k1, desc1 = keypoints(f1, 1)
@@ -108,6 +109,9 @@ def imgmatch(f1, f2):
     matcher = cv.BFMatcher(cv.NORM_L2)
     matchesCV = matcher.match(desc1, desc2)
     matchesCV = sorted(matchesCV, key=lambda x: x.distance)
+    
+    # Used to verify my 2norms and points were correct
+    #matchesCV = matchesCV[:int(len(matchesCV)/10)]
 
     # Need to build cv.DMatch objects for simple plotting. 
     matches = []
@@ -116,9 +120,9 @@ def imgmatch(f1, f2):
                   _trainIdx=int(pts[i, 1]), _distance=pts[i, 2]))
 
     img3 = cv.drawMatches(im1, k1, im2, k2, matches, im2, flags=2)
+    cv.imwrite('matches.jpg', img3)
     cv.imshow('image', img3)
     cv.waitKey(0)
-    cv.imwrite('matches')
 
 #applyFilter('filter1_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f1, 1)
@@ -154,7 +158,7 @@ class Base:
 
 
 class K_Means(Base):
-    def __init__(self, data, k, r, dims=2, shape=None):
+    def __init__(self, data, k, r, filename=None, dims=2, shape=None):
         super().__init__(data, k, r, dims)
 
         best = np.inf
@@ -173,6 +177,7 @@ class K_Means(Base):
                         zorder=0, color='rbgkmcy'[i % len('rbgkmcy')])
             print('BestSSE:', best)
             plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
+            plt.savefig(fname=filename)
             plt.show()
             return
         
@@ -192,6 +197,7 @@ class K_Means(Base):
         self.data = np.take(centroids, closestsCentroids.astype(int), 0)
         self.data = np.reshape(self.data.astype('uint8'), shape)
 
+        cv.imwrite(filename, self.data)
         cv.imshow('image', self.data)
         cv.waitKey(0)
 
@@ -241,21 +247,21 @@ class K_Means(Base):
         return centroids, np.sum(bestCentroids[:,1]), bestCentroids[:,0]
 
 
-#data = np.genfromtxt('510_cluster_dataset.txt')
-#K_Means(data, 5, 10) 
+def runKMeans1():
 
-data = cv.imread('Kmean_img1.jpg')
-#data = cv.imread('Kmean_img2.jpg')
+    for i in [2, 3, 4]:
+        data = np.genfromtxt('510_cluster_dataset.txt')
+        K_Means(data, i, 10, filename='K_Means_{}'.format(i)) 
 
-scale_percent = 25 # percent of original size
-width = int(data.shape[1] * scale_percent / 100)
-height = int(data.shape[0] * scale_percent / 100)
-dim = (width, height)
-data = cv.resize(data, dim)
+def runKMeans2():
 
-#cv.imshow('image', data)
-#cv.waitKey(0)
+    for i, filename in enumerate(['Kmean_img1.jpg', 'Kmean_img2.jpg']):
+        for k in [5, 10]:
+            data = cv.imread(filename)
+            data = resizeImage(data, 25)
+            shape = data.shape
+            data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
+            K_Means(data, k, 5, dims=3, shape=shape, filename='Kmean_img{}_k={}.jpg'.format(i, k))
 
-shape = data.shape
-data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
-K_Means(data, 10, 2, dims=3, shape=shape)
+runKMeans1()
+runKMeans2()
