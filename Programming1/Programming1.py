@@ -138,24 +138,26 @@ def imgmatch(f1, f2):
 #imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
 
 class Base:
-    def __init__(self, data, clusters, r):
+    def __init__(self, data, clusters, r, dims):
         self.r = r
         #random.seed(2)
+        self.dims = dims
         self.data = data
         self.clusters = clusters
-        self.minx = np.min(data[:,0])
-        self.miny = np.min(data[:,1])
-        self.maxx = np.max(data[:,0])
-        self.maxy = np.max(data[:,1])
+        self.maxs = []
+        self.mins = []
+        for d in range(self.dims):
+            self.maxs.append(np.max(data[:,d]))
+            self.mins.append(np.min(data[:,d]))
 
     def randomPoints(self):
-        return [(random.uniform(self.minx, self.maxx), 
-            random.uniform(self.miny, self.maxy)) for _ in range(self.clusters)]
+        return [[random.uniform(min, max) for min, max in zip(self.mins, self.maxs)] 
+                for _ in range(self.clusters)]
 
 
 class K_Means(Base):
-    def __init__(self, data, k, r):
-        super().__init__(data, k, r)
+    def __init__(self, data, k, r, dims=2):
+        super().__init__(data, k, r, dims)
 
         best = np.inf
         bestCentroids = None
@@ -165,14 +167,17 @@ class K_Means(Base):
                 best = sses
                 bestCentroids = np.array(centroids)[:,0,:]
 
+        if dims == 2:
+            for i in range(self.clusters):
+               plt.plot(self.data[closestsCentroids==i, 0], 
+                        self.data[closestsCentroids==i, 1], 'o', 
+                        zorder=0, color='rbgkmcy'[i % len('rbgkmcy')])
+            print('BestSSE:', best)
+            plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
+            plt.show()
+            return
 
-        for i in range(self.clusters):
-           plt.plot(self.data[closestsCentroids==i, 0], 
-                    self.data[closestsCentroids==i, 1], 'o', 
-                    zorder=0, color='rbgkmcy'[i % len('rbgkmcy')])
-        print('BestSSE:', best)
-        plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
-        plt.show()
+
 
 
     def run(self):
@@ -218,5 +223,7 @@ class K_Means(Base):
 
         return centroids, np.sum(bestCentroids[:,1]), bestCentroids[:,0]
 
-data = np.genfromtxt('510_cluster_dataset.txt')
-k = K_Means(data, 5, 125)
+
+data = cv.imread('Kmean_img1.jpg')
+data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
+k = K_Means(data, 5, 2, dims=3)
