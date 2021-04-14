@@ -24,7 +24,7 @@ def resizeImage(img, scale_percent):
     dim = (width, height)
     return cv.resize(img, dim)
 
-def applyFilter(filename, filter, padding):
+def applyFilter(filename, filter, padding, filtername):
     with Image.open(filename) as image:
         im = np.array(ImageOps.grayscale(image))
 
@@ -42,7 +42,8 @@ def applyFilter(filename, filter, padding):
 
 
     img = Image.fromarray(out)
-    img.show()
+    cv.imwrite(filename[:-4] + '_' + filtername + '.jpg',out)
+    #img.show()
     return out
 
 def sobel(filename):
@@ -63,7 +64,8 @@ def sobel(filename):
             out[i][j] = np.sqrt(x + y)
 
     img = Image.fromarray(out)
-    img.show()
+    cv.imwrite(filename[:-4] + '_sobel.jpg',out)
+    #img.show()
     return out
 
 
@@ -121,23 +123,8 @@ def imgmatch(f1, f2):
 
     img3 = cv.drawMatches(im1, k1, im2, k2, matches, im2, flags=2)
     cv.imwrite('matches.jpg', img3)
-    cv.imshow('image', img3)
-    cv.waitKey(0)
-
-#applyFilter('filter1_img.jpg', f1, 1)
-#applyFilter('filter2_img.jpg', f1, 1)
-#applyFilter('filter2_img.jpg', f2, 2)
-#applyFilter('filter2_img.jpg', f2, 2)
-
-#applyFilter('filter1_img.jpg', dogx, 1)
-#applyFilter('filter1_img.jpg', dogy, 1)
-#applyFilter('filter2_img.jpg', dogx, 1)
-#applyFilter('filter2_img.jpg', dogy, 1)
-
-#sobel('filter1_img.jpg')
-#sobel('filter2_img.jpg')
-
-#imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
+    #cv.imshow('image', img3)
+    #cv.waitKey(0)
 
 class Base:
     def __init__(self, data, clusters, r, dims):
@@ -178,7 +165,7 @@ class K_Means(Base):
             print('BestSSE:', best)
             plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
             plt.savefig(fname=filename)
-            plt.show()
+            #plt.show()
             return
         
         # 3D Plot
@@ -194,12 +181,15 @@ class K_Means(Base):
 
         #self.data = self.data[closestsCentroids.astype(int)] 
         #self.data = np.reshape(self.data, shape)
+
+        # Graph pixel space
         self.data = np.take(centroids, closestsCentroids.astype(int), 0)
         self.data = np.reshape(self.data.astype('uint8'), shape)
 
+        #self.data=resizeImage(self.data, 200)
         cv.imwrite(filename, self.data)
-        cv.imshow('image', self.data)
-        cv.waitKey(0)
+        #cv.imshow('image', self.data)
+        #cv.waitKey(0)
 
 
 
@@ -258,10 +248,24 @@ def runKMeans2():
     for i, filename in enumerate(['Kmean_img1.jpg', 'Kmean_img2.jpg']):
         for k in [5, 10]:
             data = cv.imread(filename)
-            data = resizeImage(data, 25)
+            data = resizeImage(data, 100)
             shape = data.shape
             data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
-            K_Means(data, k, 5, dims=3, shape=shape, filename='Kmean_img{}_k={}.jpg'.format(i, k))
+            K_Means(data, k, 5, dims=3, shape=shape, filename='Kmean_img{}_k={}.jpg'.format(i+1, k))
 
+applyFilter('filter1_img.jpg', f1, 1, 'g3')
+applyFilter('filter2_img.jpg', f1, 1, 'g3')
+applyFilter('filter1_img.jpg', f2, 2, 'g5')
+applyFilter('filter2_img.jpg', f2, 2, 'g5')
+
+applyFilter('filter1_img.jpg', dogx, 1, 'dogx')
+applyFilter('filter1_img.jpg', dogy, 1, 'dogy')
+applyFilter('filter2_img.jpg', dogx, 1, 'dogx')
+applyFilter('filter2_img.jpg', dogy, 1, 'dogy')
+
+sobel('filter1_img.jpg')
+sobel('filter2_img.jpg')
+
+imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
 runKMeans1()
 runKMeans2()
