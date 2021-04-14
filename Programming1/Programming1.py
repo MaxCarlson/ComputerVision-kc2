@@ -3,12 +3,11 @@ from PIL import Image, ImageOps
 import cv2 as cv
 import matplotlib.pyplot as plt
 
-import csv
 import copy
 import math
 import random
 from matplotlib import cm
-from scipy.interpolate import griddata
+from mpl_toolkits.mplot3d import Axes3D
 
 f1 = np.array([[1, 2, 1],[2, 4, 2],[1, 2, 1]], dtype='float')
 f1 *= 1.0/16
@@ -176,9 +175,17 @@ class K_Means(Base):
             plt.title('SSE: %.2f' % sses + ' k='+str(k) + ' r='+str(r))
             plt.show()
             return
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        for i, m in zip(range(self.clusters), 
+                        ['o', 'x', '*', '#', '@', '!', '%', '^']):
 
+            d = self.data[closestsCentroids==i]
+            d = d[:int(len(d)/20)]
+            ax.scatter(d[:, 0], d[:, 1], d[:, 2], m)
 
-
+        plt.show()
 
     def run(self):
 
