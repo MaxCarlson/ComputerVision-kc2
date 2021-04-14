@@ -116,9 +116,9 @@ def imgmatch(f1, f2):
                   _trainIdx=int(pts[i, 1]), _distance=pts[i, 2]))
 
     img3 = cv.drawMatches(im1, k1, im2, k2, matches, im2, flags=2)
-    plt.imshow(img3)
-    plt.savefig('matches')
-    plt.show()
+    cv.imshow('image', img3)
+    cv.waitKey(0)
+    cv.imwrite('matches')
 
 #applyFilter('filter1_img.jpg', f1, 1)
 #applyFilter('filter2_img.jpg', f1, 1)
@@ -189,13 +189,11 @@ class K_Means(Base):
 
         #self.data = self.data[closestsCentroids.astype(int)] 
         #self.data = np.reshape(self.data, shape)
-
         self.data = np.take(centroids, closestsCentroids.astype(int), 0)
-        self.data = np.reshape(self.data.astype(int), shape)
+        self.data = np.reshape(self.data.astype('uint8'), shape)
 
-        plt.imshow(self.data)
-        plt.show()
-        a=5
+        cv.imshow('image', self.data)
+        cv.waitKey(0)
 
 
 
@@ -247,13 +245,17 @@ class K_Means(Base):
 #K_Means(data, 5, 10) 
 
 data = cv.imread('Kmean_img1.jpg')
+#data = cv.imread('Kmean_img2.jpg')
 
-scale_percent = 20 # percent of original size
+scale_percent = 25 # percent of original size
 width = int(data.shape[1] * scale_percent / 100)
 height = int(data.shape[0] * scale_percent / 100)
 dim = (width, height)
 data = cv.resize(data, dim)
 
+#cv.imshow('image', data)
+#cv.waitKey(0)
+
 shape = data.shape
 data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
-K_Means(data, 5, 25, dims=3, shape=shape)
+K_Means(data, 10, 2, dims=3, shape=shape)
