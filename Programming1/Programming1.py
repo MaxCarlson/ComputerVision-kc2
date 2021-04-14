@@ -182,7 +182,6 @@ class K_Means(Base):
                         ['o', 'x', '*', '#', '@', '!', '%', '^']):
 
             d = self.data[closestsCentroids==i]
-            d = d[:int(len(d)/20)]
             ax.scatter(d[:, 0], d[:, 1], d[:, 2], m)
 
         plt.show()
@@ -232,5 +231,12 @@ class K_Means(Base):
 
 
 data = cv.imread('Kmean_img1.jpg')
+
+scale_percent = 20 # percent of original size
+width = int(data.shape[1] * scale_percent / 100)
+height = int(data.shape[0] * scale_percent / 100)
+dim = (width, height)
+data = cv.resize(data, dim)
+
 data = np.reshape(data, (data.shape[0] * data.shape[1], 3))
 k = K_Means(data, 5, 2, dims=3)
