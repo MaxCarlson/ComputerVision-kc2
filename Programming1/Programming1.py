@@ -28,15 +28,15 @@ def applyFilter(filename, filter, padding, filtername):
     with Image.open(filename) as image:
         im = np.array(ImageOps.grayscale(image))
 
-    sz = im.shape
     fz = filter.shape[0]
-
-    im = np.pad(im, padding)
-
     out = np.zeros(im.shape)
 
-    for i in range(0, sz[0]):
-        for j in range(0, sz[1]):
+    im = np.pad(im, padding)
+    sz = im.shape
+
+
+    for i in range(0, sz[0] - padding * 2):
+        for j in range(0, sz[1] - padding * 2):
             z = np.multiply(filter, im[i:i+fz, j:j+fz])
             out[i][j] = np.sum(z)
 
@@ -258,14 +258,14 @@ applyFilter('filter2_img.jpg', f1, 1, 'g3')
 applyFilter('filter1_img.jpg', f2, 2, 'g5')
 applyFilter('filter2_img.jpg', f2, 2, 'g5')
 
-applyFilter('filter1_img.jpg', dogx, 1, 'dogx')
-applyFilter('filter1_img.jpg', dogy, 1, 'dogy')
-applyFilter('filter2_img.jpg', dogx, 1, 'dogx')
-applyFilter('filter2_img.jpg', dogy, 1, 'dogy')
-
-sobel('filter1_img.jpg')
-sobel('filter2_img.jpg')
-
-imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
-runKMeans1()
-runKMeans2()
+#applyFilter('filter1_img.jpg', dogx, 1, 'dogx')
+#applyFilter('filter1_img.jpg', dogy, 1, 'dogy')
+#applyFilter('filter2_img.jpg', dogx, 1, 'dogx')
+#applyFilter('filter2_img.jpg', dogy, 1, 'dogy')
+#
+#sobel('filter1_img.jpg')
+#sobel('filter2_img.jpg')
+#
+#imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
+#runKMeans1()
+#runKMeans2()
