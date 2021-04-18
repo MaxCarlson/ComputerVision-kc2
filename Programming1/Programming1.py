@@ -258,14 +258,14 @@ applyFilter('filter2_img.jpg', f1, 1, 'g3')
 applyFilter('filter1_img.jpg', f2, 2, 'g5')
 applyFilter('filter2_img.jpg', f2, 2, 'g5')
 
-#applyFilter('filter1_img.jpg', dogx, 1, 'dogx')
-#applyFilter('filter1_img.jpg', dogy, 1, 'dogy')
-#applyFilter('filter2_img.jpg', dogx, 1, 'dogx')
-#applyFilter('filter2_img.jpg', dogy, 1, 'dogy')
-#
-#sobel('filter1_img.jpg')
-#sobel('filter2_img.jpg')
-#
-#imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
-#runKMeans1()
-#runKMeans2()
+applyFilter('filter1_img.jpg', dogx, 1, 'dogx')
+applyFilter('filter1_img.jpg', dogy, 1, 'dogy')
+applyFilter('filter2_img.jpg', dogx, 1, 'dogx')
+applyFilter('filter2_img.jpg', dogy, 1, 'dogy')
+
+sobel('filter1_img.jpg')
+sobel('filter2_img.jpg')
+
+imgmatch('SIFT1_img.jpg', 'SIFT2_img.jpg')
+runKMeans1()
+runKMeans2()
